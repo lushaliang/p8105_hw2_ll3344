@@ -87,7 +87,7 @@ transit_df =
          entry = as.logical(entry))
 ```
 
-The NYC transit dataset contains information about characteristics of entrances and exits of each subway station in NYC. Thus far we have subsetted a portion of the dataset focusing on subway lines, routes, and information about entrances. The resulting data set has `r nrow(transit_df)` rows and `r ncol(transit_df)`columns. Currently the data is not tidy in that the route variable encompasses both route name and route number. 
+The NYC transit dataset contains information about characteristics of entrances and exits of each subway station in NYC. Thus far we have subsetted a portion of the dataset focusing on subway lines, routes, and information about entrances. The resulting data set has `r nrow(transit_df)` rows and `r ncol(transit_df)` columns. Currently the data is not tidy in that the route variable encompasses both route name and route number. 
 
 Determine the number of stations using the distinct function. 
 
@@ -97,17 +97,8 @@ distinct_transit_df =
   distinct(station_name, .keep_all = TRUE)
 ```
 
-There are `r nrow(distinct_transit_df)` distinct stations. 
-
-Determine the number of ADA compliant stations using the filter function.
-
-```{r}
-ada_station_df =
-  distinct_transit_df %>%
-  filter(ada == "TRUE")
-```
-
-`r nrow(ada_station_df)` stations are ADA compliant. 
+* There are `r nrow(distinct_transit_df)` distinct stations. 
+* Of those stations, `r distinct_transit_df %>% filter(ada == "TRUE") %>% nrow()` are ADA compliant.
 
 Determine what proportion of station entrances/exits without vending allow entrance.
 
@@ -139,7 +130,7 @@ tidy_transit_df =
   )
 ```
 
-How many distinct stations serve the A train?
+`r tidy_transit_df %>% filter(route_name == "A") %>% nrow()` distinct stations serve the A train. 
 
 ```{r}
 a_train_df =
@@ -147,7 +138,7 @@ a_train_df =
   filter(route_name == "A")
 ```
 
-`r nrow(a_train_df)` stations serve the A train. Of the stations that serve the A train, `r a_train_df %>% filter(ada == "TRUE") %>% nrow()` of them are ADA compliant. 
+`r nrow(a_train_df)` stations serve the A train. Of the stations that serve the A train, `r a_train_df %>% filter(ada == "TRUE") %>% nrow()` are ADA compliant. 
 
 ## Problem 3
 
