@@ -69,7 +69,7 @@ precip_df =
   left_join(precip_df, month_df, by = "month")
 ```
 
-This dataset contains information from the Mr. Trashwheel trash collector in Baltimore, Maryland. As trash enters the harbor, the trashwheel collects that trash, and stores it in a dumpster. The dataset contains information on year, month, and trash collected, including some specific kinds of trash (such as sports balls, plastic bottles, and cigarette butts). There are a total of `r nrow(trashwheel_df)` rows in our final dataset. Additional data sheets include monthly precipitation data. 
+This dataset contains information from the Mr. Trashwheel trash collector in Baltimore, Maryland. As trash enters the harbor, the trashwheel collects that trash, and stores it in a dumpster. The trashwheel_df dataset contains information on year, month, and trash collected, including some specific kinds of trash (such as sports balls, plastic bottles, and cigarette butts). There are a total of `r nrow(trashwheel_df)` rows in our final trashwheel dataset. Additional data sheets include monthly precipitation data. There are a total of `r nrow(precip_df)` observations in the final precipitation dataset which includes precipitation in inches by month for the years 2017 and 2018. 
 
 * The total amount of precipitation in 2018 was `r precip_2018 %>% pull(total) %>% sum()` inches. 
 * The median number of sports balls in a dumpster in 2017 was `r trashwheel_df %>% filter(year == "2017") %>% pull(sports_balls) %>% median()`. 
@@ -87,9 +87,9 @@ transit_df =
          entry = as.logical(entry))
 ```
 
-The NYC transit dataset contains information about characteristics of entrances and exits of each subway station in NYC. Thus far we have subsetted a portion of the dataset focusing on subway lines, routes, and information about entrances. The resulting data set has `r nrow(transit_df)` rows and `r ncol(transit_df)` columns. Currently the data is not tidy in that the route variable encompasses both route name and route number. 
+The NYC transit dataset contains information about characteristics of entrances and exits of each subway station in NYC. This includes information on which lines run from each station, whether entrances/exits are ADA compliant, and so forth. Thus far we have subsetted a portion of the dataset focusing on subway lines, routes, and information about entrances. We have also converted entry information from Yes/No format to logical (True/False). The resulting data set has `r nrow(transit_df)` rows and `r ncol(transit_df)` columns. Currently the data is not tidy in that the route variable encompasses both route name and route number. 
 
-Determine the number of stations using the distinct function. 
+Since the data contain multiple rows for each distinct station, we will now determine the number of stations using the distinct function. 
 
 ```{r}
 distinct_transit_df =
@@ -108,15 +108,15 @@ without_vending_df =
   filter(vending == "NO")
 
 without_vending_entry_df =
-  transit_df %>%
-  filter(vending == "NO", entry == "TRUE")
+  without_vending_df %>%
+  filter(entry == "TRUE")
 ```
 
 * The number of station entrances/exits without vending that allow entrance is `r nrow(without_vending_entry_df)`.
 * The total number of stations entrances/exits without vending is `r nrow(without_vending_df)`. 
 * The proportion of station entrances/exits without vending that allow entry out of all stations without vending is `r nrow(without_vending_entry_df)/nrow(without_vending_df)`. 
 
-Reformat data so they are tidier! More explicitly, reoconfigure the route variable to two distinct variables, one that contains route number and one that contains route name. 
+Now we will reformat data so they are tidier! More explicitly, we will reoconfigure the route variable to two distinct variables: one that contains route number and one that contains route name. 
 
 ```{r}
 tidy_transit_df = 
@@ -138,8 +138,91 @@ a_train_df =
   filter(route_name == "A")
 ```
 
-`r nrow(a_train_df)` stations serve the A train. Of the stations that serve the A train, `r a_train_df %>% filter(ada == "TRUE") %>% nrow()` are ADA compliant. 
+Of the stations that serve the A train, `r a_train_df %>% filter(ada == "TRUE") %>% nrow()` are ADA compliant. 
 
 ## Problem 3
 
+Read in the FiveThirtyEight data. 
 
+```{r}
+pols_df =
+  read_csv("./data/fivethirtyeight/pols-month.csv")
+
+unemployment_df =
+  read_csv("./data/fivethirtyeight/unemployment.csv")
+
+snp_df =
+  read_csv("./data/fivethirtyeight/snp.csv")
+```
+
+Clean pols_month data.
+
+```{r}
+pols_df = 
+  pols_df %>%
+  separate(mon, into = c("year", "month", "day"), sep = "-") %>%
+  mutate(across(year:day, as.numeric))
+
+pols_df = left_join(pols_df, month_df, by = "month")  
+
+pols_df =
+  pols_df %>%
+  relocate(year, month_name) %>%
+  mutate(president = ifelse(prez_gop == 0, "dem", "gop")) %>%
+  arrange(year, month) %>%
+  select(-c(month, day, prez_gop, prez_dem)) %>%
+  rename(month = month_name)
+```
+
+Clean snp data. 
+
+```{r}
+snp_df = 
+  snp_df %>%
+  separate(date, into = c("month", "day", "year"), sep = "/") %>%
+  mutate(across(month:year, as.numeric))
+
+snp_df = left_join(snp_df, month_df, by = "month")  
+
+snp_df =
+  snp_df %>%
+  relocate(year, month_name) %>% 
+  arrange(year, month) %>%
+  select(-c(month, day)) %>%
+  rename(month = month_name)
+```
+
+Tidy the unemployment data. 
+
+```{r}
+unemployment_df = 
+  unemployment_df %>%
+  rename(year = Year, January = Jan, February = Feb, March = Mar, April = Apr, June = Jun, July = Jul,
+         August = Aug, September = Sep, October = Oct, November = Nov, December = Dec) %>%
+  pivot_longer(
+    January:December,
+    names_to = "month",
+    values_to = "unemployment"
+  ) 
+```
+
+Join snp with pols. 
+
+```{r}
+snp_pols_df = left_join(pols_df, snp_df, by = c("month", "year")) 
+```
+
+Join unemployment with the result. 
+
+```{r}
+complete_df = left_join(snp_pols_df, unemployment_df, by =c("month", "year"))
+```
+
+This final dataset now contains the pols, snp, and unemployment datasets, grouped by month and year.
+
+* The pols dataset contains information from January 1947 to June 2015 related to the number of national politicians who are democratic or republican at any given time. 
+* The snp dataset contains the closing values of the S&P from January 1950 to July 2015. 
+* The unemployment dataset contains the monthly unemployment percentages from January 1948 to June 2015. 
+* The final dataset has a total of `r nrow(complete_df)` observations and `r ncol(complete_df)` variables. 
+* The final dataset has the same date range as that of the pols dataset since we merged subsequent datasets into the pols dataset using left join. 
+* The variables contained in the final dataset are: `r colnames(complete_df)`.
