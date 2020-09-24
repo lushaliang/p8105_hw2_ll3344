@@ -1,0 +1,15 @@
+---
+title: "p8105_hw2_ll3344"
+author: "Lusha Liang"
+date: "9/24/2020"
+output: github_document
+---
+
+```{r}
+library(tidyverse)
+library(readxl)
+```
+
+## Problem 1
+
+
