@@ -173,6 +173,7 @@ pols_df =
   select(-c(month, day, prez_gop, prez_dem)) %>%
   rename(month = month_name)
 ```
+NB: Interestingly, prez_gop has values of 0 for Democrat and 1 for Republican/GOP, but also a few values of 2 between August through December of 1974 which correspond to the transition of the presidency from Richard Nixon to Gerald Ford following Watergate and Nixon's subsequent impeachment. However, since Gerald Ford was a Republican as well, the above code specifying that any value but "0" in the prez_gop column should be coded as "gop" is still correct and produces "gop" in the months between August through December of 1974. 
 
 Clean snp data. 
 
